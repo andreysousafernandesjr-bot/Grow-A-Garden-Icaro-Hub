@@ -1,16 +1,15 @@
-
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 local infiniteJumpConnection
-
 local walkSpeedValue = 16
 local walkSpeedEnabled = false
 local walkSpeedConnection
-
 local flyConnection
 local flying = false
+local duplicateConnection
 
 local function startFly()
     if flying then return end
@@ -22,11 +21,8 @@ local function startFly()
     bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     bodyVelocity.Parent = humanoidRootPart
 
-    flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        local moveDirection = Vector3.new()
-        -- Mobile: sempre voa para cima enquanto ativo
-        moveDirection = Vector3.new(0, 50, 0)
-        bodyVelocity.Velocity = moveDirection
+    flyConnection = RunService.Heartbeat:Connect(function()
+        bodyVelocity.Velocity = Vector3.new(0, 50, 0)
     end)
 
     character.Humanoid.PlatformStand = true
@@ -37,9 +33,8 @@ local function stopFly()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
         local hrp = character.HumanoidRootPart
-        if hrp:FindFirstChildOfClass("BodyVelocity") then
-            hrp:FindFirstChildOfClass("BodyVelocity"):Destroy()
-        end
+        local bv = hrp:FindFirstChildOfClass("BodyVelocity")
+        if bv then bv:Destroy() end
     end
     if flyConnection then
         flyConnection:Disconnect()
@@ -50,52 +45,32 @@ local function stopFly()
     end
 end
 
-local duplicateConnection
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Grow A Garden | Icaro Hub",
-   Icon = 76669815272344, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   Icon = 76669815272344,
    LoadingTitle = "Icaro Hub",
    LoadingSubtitle = "by Andrey Hub",
-   ShowText = "Icaro Hub", -- for mobile users to unhide rayfield, change if you'd like
-   Theme = "DarkBlue", -- Check https://docs.sirius.menu/rayfield/configuration/themes
-
-   ToggleUIKeybind = "K", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
-
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
-
+   ShowText = "Icaro Hub",
+   Theme = "DarkBlue",
+   ToggleUIKeybind = "K",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Icaro Hub" -- The name of the file where the configuration will be saved
+      FileName = "Icaro Hub"
    },
-
    Discord = {
-      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
-      Invite = "https://discord.gg/KkVZEcwN", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+      Enabled = true,
+      Invite = "https://discord.gg/KkVZEcwN",
+      RememberJoins = true
    },
-
-   KeySystem = false, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "Untitled",
-      Subtitle = "Key System",
-      Note = "No method of obtaining the key is provided", -- Use this to tell the user how to get a key
-      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
+   KeySystem = false
 })
 
-local main = Window:CreateTab("Main", 4483362458) -- Title, Image
+local main = Window:CreateTab("Main", 4483362458)
+local dupepets = Window:CreateTab("Dupe Pets", 4483362458)
 
-local dupepets = Window:CreateTab("Dupe Pets", 4483362458) -- Title, Image
-
-local Toggle = main:CreateToggle({
+main:CreateToggle({
    Name = "Infinite Jump",
    CurrentValue = false,
    Flag = "InfiniteJumpToggle",
@@ -116,10 +91,10 @@ local Toggle = main:CreateToggle({
             infiniteJumpConnection = nil
          end
       end
-   end,
+   end
 })
 
-local Slider = main:CreateSlider({
+main:CreateSlider({
    Name = "WalkSpeed",
    Range = {16, 100},
    Increment = 1,
@@ -131,10 +106,10 @@ local Slider = main:CreateSlider({
       if walkSpeedEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
          player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = walkSpeedValue
       end
-   end,
+   end
 })
 
-local Toggle = main:CreateToggle({
+main:CreateToggle({
    Name = "Ativar WalkSpeed",
    CurrentValue = false,
    Flag = "WalkSpeedToggle",
@@ -159,10 +134,10 @@ local Toggle = main:CreateToggle({
             walkSpeedConnection = nil
          end
       end
-   end,
+   end
 })
 
-local Toggle = main:CreateToggle({
+main:CreateToggle({
     Name = "Fly (Mobile)",
     CurrentValue = false,
     Flag = "FlyMobileToggle",
@@ -172,21 +147,20 @@ local Toggle = main:CreateToggle({
         else
             stopFly()
         end
-    end,
+    end
 })
 
-local Toggle = dupepets:CreateToggle({
-    Name = "Dupe Pets "Beta",
+dupepets:CreateToggle({
+    Name = 'Dupe Pets "Beta"',
     CurrentValue = false,
     Flag = "DuplicateHandItemToggle",
     Callback = function(Value)
         if Value then
-            duplicateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            duplicateConnection = RunService.Heartbeat:Connect(function()
                 local character = player.Character
                 if character then
                     local tool = character:FindFirstChildOfClass("Tool")
                     if tool then
-                        -- Tenta duplicar o item criando uma cópia e colocando na mochila
                         local clone = tool:Clone()
                         clone.Parent = player.Backpack
                     end
@@ -198,5 +172,5 @@ local Toggle = dupepets:CreateToggle({
                 duplicateConnection = nil
             end
         end
-    end,
+    end
 })
